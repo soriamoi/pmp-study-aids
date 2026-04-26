@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EVM Study Session — PMP Week 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --ink: #0f0f0f;
+  --page: #f5f2ec;
+  --card: #ffffff;
+  --muted: #6b6560;
+  --border: #e0dbd3;
+  --accent: #c84b2f;
+  --accent-bg: #fdf0ed;
+  --teal: #1a6b5a;
+  --teal-bg: #e8f4f1;
+  --amber: #9a6200;
+  --amber-bg: #fef7e6;
+  --blue: #1d4e89;
+  --blue-bg: #eaf0f8;
+  --green: #2e6b3e;
+  --green-bg: #eaf4ed;
+  --red: #b83232;
+  --red-bg: #fdeaea;
+  --mono: 'JetBrains Mono', monospace;
+  --display: 'Syne', sans-serif;
+  --body: 'Lato', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--body);
+  background: var(--page);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── Top bar ── */
+.topbar {
+  background: var(--ink);
+  color: #fff;
+  padding: 0.75rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.topbar-label { font-family: var(--display); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #aaa; }
+.topbar-title { font-family: var(--display); font-size: 16px; font-weight: 700; }
+.topbar-tag { font-family: var(--mono); font-size: 11px; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 3px; margin-left: auto; }
+
+/* ── Tab nav ── */
+.tab-nav {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  padding: 0 2rem;
+  gap: 0;
+  overflow-x: auto;
+}
+.tab-btn {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* ── Main layout ── */
+.main { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Section headers ── */
+.sec-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+  margin-top: 2rem;
+}
+.sec-eyebrow:first-child { margin-top: 0; }
+.sec-title {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 1rem;
+}
+
+/* ── Formula cards ── */
+.formula-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.fcard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.fcard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--border);
+  transition: background 0.15s;
+}
+.fcard:hover { border-color: #bbb; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.fcard.open { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+.fcard.open::before { background: var(--accent); }
+.fcard-acronym { font-family: var(--display); font-size: 22px; font-weight: 800; color: var(--ink); }
+.fcard-name { font-size: 12px; color: var(--muted); margin-top: 1px; margin-bottom: 8px; }
+.fcard-formula { font-family: var(--mono); font-size: 14px; color: var(--accent); font-weight: 500; }
+.fcard-hint {
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.5;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: none;
+}
+.fcard.open .fcard-hint { display: block; }
+.fcard-tap { font-size: 10px; color: #bbb; margin-top: 6px; font-family: var(--mono); }
+
+/* ── Interpretation table ── */
+.interp-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.interp-table th { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; background: var(--ink); color: #fff; padding: 8px 14px; text-align: left; }
+.interp-table td { font-size: 13px; padding: 9px 14px; border-top: 1px solid var(--border); vertical-align: middle; }
+.interp-table tr:hover td { background: #fafaf7; }
+.val-badge { font-family: var(--mono); font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+.good { background: var(--green-bg); color: var(--green); }
+.warn { background: var(--amber-bg); color: var(--amber); }
+.bad  { background: var(--red-bg);   color: var(--red);   }
+.neutral { background: var(--blue-bg); color: var(--blue); }
+
+/* ── Calculator ── */
+.calc-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+.calc-inputs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.input-group label { font-family: var(--mono); font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; letter-spacing: 0.06em; }
+.input-group input {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 16px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--page);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input-group input:focus { border-color: var(--accent); }
+.results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.result-chip {
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  text-align: center;
+  transition: all 0.2s;
+}
+.result-chip .rc-label { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.result-chip .rc-val { font-family: var(--display); font-size: 18px; font-weight: 700; margin-top: 2px; }
+.result-chip .rc-interp { font-size: 10px; margin-top: 3px; }
+.rc-good  { border-color: #b8dfc5; background: var(--green-bg); }
+.rc-bad   { border-color: #f0b8b8; background: var(--red-bg);   }
+.rc-warn  { border-color: #f5d9a0; background: var(--amber-bg); }
+.rc-neut  { border-color: #bdd2ec; background: var(--blue-bg);  }
+.rc-good .rc-val  { color: var(--green); }
+.rc-bad  .rc-val  { color: var(--red);   }
+.rc-warn .rc-val  { color: var(--amber); }
+.rc-neut .rc-val  { color: var(--blue);  }
+.calc-summary {
+  margin-top: 1rem;
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  border-left: 3px solid var(--border);
+}
+
+/* ── Quiz ── */
+.quiz-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+.quiz-score { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.quiz-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.quiz-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; border-radius: 2px; }
+.q-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+.q-num { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 6px; }
+.q-text { font-size: 15px; line-height: 1.65; color: var(--ink); margin-bottom: 1.25rem; font-weight: 400; }
+.q-scenario {
+  background: var(--amber-bg);
+  border-left: 3px solid var(--amber);
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--amber);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+.opts { display: flex; flex-direction: column; gap: 6px; }
+.opt-btn {
+  font-family: var(--body);
+  font-size: 13px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  background: white;
+  color: var(--ink);
+  transition: all 0.12s;
+  line-height: 1.5;
+}
+.opt-btn:hover:not([disabled]) { border-color: #aaa; background: #fafaf7; }
+.opt-btn.correct { background: var(--green-bg); border-color: #7ecb99; color: var(--green); }
+.opt-btn.wrong   { background: var(--red-bg);   border-color: #f0b8b8; color: var(--red);   }
+.opt-btn.reveal  { background: var(--green-bg); border-color: #7ecb99; color: var(--green); }
+.explanation {
+  margin-top: 1rem;
+  padding: 12px 14px;
+  background: var(--blue-bg);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--blue);
+  line-height: 1.65;
+  border-left: 3px solid var(--blue);
+  display: none;
+}
+.q-nav { display: flex; gap: 8px; align-items: center; }
+.nav-btn {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.nav-btn:hover { background: var(--ink); color: white; border-color: var(--ink); }
+.nav-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+.nav-btn.primary:hover { background: #a83a22; border-color: #a83a22; }
+.q-counter { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-left: auto; }
+
+/* ── EAC decision tree ── */
+.tree-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 10px;
+}
+.tree-q { font-family: var(--display); font-size: 15px; font-weight: 700; margin-bottom: 1rem; }
+.tree-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tree-opt {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.5;
+  transition: all 0.12s;
+  background: white;
+}
+.tree-opt:hover { border-color: var(--accent); background: var(--accent-bg); }
+.tree-opt.selected { border-color: var(--accent); background: var(--accent-bg); }
+.tree-result {
+  margin-top: 1rem;
+  padding: 14px 16px;
+  border-radius: 6px;
+  display: none;
+}
+.tree-result.show { display: block; }
+.tree-formula-display { font-family: var(--mono); font-size: 20px; color: var(--accent); font-weight: 500; margin-bottom: 6px; }
+.tree-formula-name { font-family: var(--display); font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.tree-formula-when { font-size: 13px; color: var(--muted); }
+.tree-reset { font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; margin-top: 8px; display: inline-block; }
+.tree-reset:hover { color: var(--ink); }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .topbar { padding: 0.75rem 1rem; }
+  .tab-nav { padding: 0 0.5rem; }
+  .main { padding: 1.25rem 1rem 3rem; }
+  .tree-opts { grid-template-columns: 1fr; }
+  .formula-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-label">PMP Week 1 Study Session</div>
+    <div class="topbar-title">Earned Value Management</div>
+  </div>
+  <div class="topbar-tag">10 formulas · calculator · 8 Qs</div>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('formulas', this)">Formulas</button>
+  <button class="tab-btn" onclick="showTab('interpret', this)">Interpretation</button>
+  <button class="tab-btn" onclick="showTab('calc', this)">Calculator</button>
+  <button class="tab-btn" onclick="showTab('eac', this)">EAC Decision</button>
+  <button class="tab-btn" onclick="showTab('quiz', this)">Practice Quiz</button>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════ FORMULAS ══════════════════════════════════ -->
+<div id="panel-formulas" class="panel active">
+  <div class="sec-eyebrow">Core inputs — tap to reveal memory tip</div>
+  <div class="sec-title">Foundation values</div>
+  <div class="formula-grid" style="margin-bottom:1.5rem">
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">PV</div>
+      <div class="fcard-name">Planned Value</div>
+      <div class="fcard-formula">% planned × BAC</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">What you <em>planned</em> to have done by now, expressed in dollars. The budget baseline at a point in time. If you planned 50% done and BAC = $100k, PV = $50k.</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">EV</div>
+      <div class="fcard-name">Earned Value</div>
+      <div class="fcard-formula">% complete × BAC</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">The value of work <em>actually done</em>. You "earn" it by completing work — not by spending money. EV is the anchor of every other formula.</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">AC</div>
+      <div class="fcard-name">Actual Cost</div>
+      <div class="fcard-formula">given in scenario</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">What you <em>actually spent</em>. Always given — never calculated from other values. If the question gives you AC, use it directly.</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">BAC</div>
+      <div class="fcard-name">Budget at Completion</div>
+      <div class="fcard-formula">total approved budget</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">The original total budget for all project work. Fixed unless a formal change request is approved through change control.</div>
+    </div>
+  </div>
+
+  <div class="sec-eyebrow">Variances — negative is always bad</div>
+  <div class="sec-title">Schedule & cost variance</div>
+  <div class="formula-grid" style="margin-bottom:1.5rem">
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">CV</div>
+      <div class="fcard-name">Cost Variance</div>
+      <div class="fcard-formula">EV − AC</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">Are we over or under budget? Negative = overspent. Memory: "Did we earn more than we spent?" EV − AC. If you earned $80k but spent $90k, CV = −$10k.</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">SV</div>
+      <div class="fcard-name">Schedule Variance</div>
+      <div class="fcard-formula">EV − PV</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">Are we ahead or behind schedule? Negative = behind. Memory: "Did we earn what we planned to earn?" Note: SV trends toward zero at project end.</div>
+    </div>
+  </div>
+
+  <div class="sec-eyebrow">Performance indexes — 1.0 is perfect, above 1.0 is good</div>
+  <div class="sec-title">Efficiency ratios</div>
+  <div class="formula-grid" style="margin-bottom:1.5rem">
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">CPI</div>
+      <div class="fcard-name">Cost Performance Index</div>
+      <div class="fcard-formula">EV ÷ AC</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">The most important EVM metric. CPI 0.8 = getting $0.80 of value per $1 spent. Below 1.0 = over budget. Research shows CPI rarely improves significantly after 20% complete.</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">SPI</div>
+      <div class="fcard-name">Schedule Performance Index</div>
+      <div class="fcard-formula">EV ÷ PV</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">Below 1.0 = behind schedule. SPI is less reliable than CPI late in the project because it converges toward 1.0 as all work gets done.</div>
+    </div>
+  </div>
+
+  <div class="sec-eyebrow">Forecasts — where are we headed?</div>
+  <div class="sec-title">Completion estimates</div>
+  <div class="formula-grid">
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">EAC<sub style="font-size:12px">₁</sub></div>
+      <div class="fcard-name">Estimate at Completion (typical)</div>
+      <div class="fcard-formula">BAC ÷ CPI</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">Use when current CPI efficiency will continue for the rest of the project. Most common on the exam. "If we keep performing this way..."</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">EAC<sub style="font-size:12px">₂</sub></div>
+      <div class="fcard-name">EAC — fresh re-estimate</div>
+      <div class="fcard-formula">AC + ETC</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">Use when the original estimate is fundamentally flawed and the team provides a new bottom-up estimate for remaining work (ETC).</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">EAC<sub style="font-size:12px">₃</sub></div>
+      <div class="fcard-name">EAC — both CPI & SPI</div>
+      <div class="fcard-formula">AC + [(BAC−EV) ÷ (CPI×SPI)]</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">Use when both cost and schedule efficiency affect remaining work. Less common but appears on harder questions involving tight deadlines.</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">ETC</div>
+      <div class="fcard-name">Estimate to Complete</div>
+      <div class="fcard-formula">EAC − AC</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">How much more money is needed? Simple: EAC minus what you've already spent. Or given directly as a fresh bottom-up estimate from the team.</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">VAC</div>
+      <div class="fcard-name">Variance at Completion</div>
+      <div class="fcard-formula">BAC − EAC</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">How over or under budget will the project finish? Negative = projected to finish over budget. This is the bottom-line forecast for the sponsor.</div>
+    </div>
+    <div class="fcard" onclick="this.classList.toggle('open')">
+      <div class="fcard-acronym">TCPI</div>
+      <div class="fcard-name">To-Complete Performance Index</div>
+      <div class="fcard-formula">(BAC−EV) ÷ (BAC−AC)</div>
+      <div class="fcard-tap">tap to expand</div>
+      <div class="fcard-hint">Efficiency required on <em>remaining</em> work to hit BAC. TCPI > 1.1 is generally considered unrealistic — recommend revising EAC instead. TCPI > 1.0 means you need to work harder than current pace.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ INTERPRET ══════════════════════════════════ -->
+<div id="panel-interpret" class="panel">
+  <div class="sec-eyebrow">Quick reference — how to read any EVM value</div>
+  <div class="sec-title">Interpretation guide</div>
+
+  <table class="interp-table" style="margin-bottom:1.5rem">
+    <thead>
+      <tr><th>Metric</th><th>Value</th><th>Meaning</th><th>Action signal</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>CV</strong></td><td><span class="val-badge good">Positive</span></td><td>Under budget</td><td>Continue, monitor</td></tr>
+      <tr><td><strong>CV</strong></td><td><span class="val-badge bad">Negative</span></td><td>Over budget</td><td>Investigate root cause, corrective action</td></tr>
+      <tr><td><strong>SV</strong></td><td><span class="val-badge good">Positive</span></td><td>Ahead of schedule</td><td>Continue, monitor</td></tr>
+      <tr><td><strong>SV</strong></td><td><span class="val-badge bad">Negative</span></td><td>Behind schedule</td><td>Crash or fast-track critical path</td></tr>
+      <tr><td><strong>CPI</strong></td><td><span class="val-badge good">&gt; 1.0</span></td><td>Getting more than $1 value per $1 spent</td><td>Maintain efficiency</td></tr>
+      <tr><td><strong>CPI</strong></td><td><span class="val-badge warn">= 1.0</span></td><td>On budget exactly</td><td>Monitor closely</td></tr>
+      <tr><td><strong>CPI</strong></td><td><span class="val-badge bad">&lt; 1.0</span></td><td>Getting less than $1 value per $1 spent</td><td>Escalate, corrective action required</td></tr>
+      <tr><td><strong>SPI</strong></td><td><span class="val-badge good">&gt; 1.0</span></td><td>Ahead of schedule</td><td>Maintain pace</td></tr>
+      <tr><td><strong>SPI</strong></td><td><span class="val-badge bad">&lt; 1.0</span></td><td>Behind schedule</td><td>Schedule recovery plan</td></tr>
+      <tr><td><strong>TCPI</strong></td><td><span class="val-badge good">&lt; 1.0</span></td><td>Remaining work easier than current pace</td><td>On track to beat budget</td></tr>
+      <tr><td><strong>TCPI</strong></td><td><span class="val-badge warn">1.0–1.1</span></td><td>Slightly harder than current pace needed</td><td>Achievable with improvement</td></tr>
+      <tr><td><strong>TCPI</strong></td><td><span class="val-badge bad">&gt; 1.1</span></td><td>Unrealistic efficiency required</td><td>Revise EAC, inform sponsor</td></tr>
+      <tr><td><strong>VAC</strong></td><td><span class="val-badge good">Positive</span></td><td>Will finish under budget</td><td>Continue</td></tr>
+      <tr><td><strong>VAC</strong></td><td><span class="val-badge bad">Negative</span></td><td>Will finish over budget</td><td>Request additional funds or reduce scope</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sec-eyebrow">Memory anchor</div>
+  <div class="sec-title">The EV formula pattern</div>
+  <div class="tree-card">
+    <p style="font-size:14px; line-height:1.7; color:var(--ink)">
+      Almost every EVM formula either <strong>starts with EV</strong> or <strong>divides something by EV</strong>.<br><br>
+      <span style="font-family:var(--mono);color:var(--accent)">Variances</span> → EV minus something (EV−AC, EV−PV)<br>
+      <span style="font-family:var(--mono);color:var(--teal)">Indexes</span> → EV divided by something (EV÷AC, EV÷PV)<br>
+      <span style="font-family:var(--mono);color:var(--blue)">Forecasts</span> → work backward from BAC using CPI<br><br>
+      If you lose your place in a calculation, <strong>find EV first</strong>. Everything else follows.
+    </p>
+  </div>
+
+  <div class="sec-eyebrow" style="margin-top:1.5rem">Sunk cost trap</div>
+  <div class="tree-card" style="border-left:3px solid var(--accent)">
+    <p style="font-size:14px; line-height:1.7; color:var(--ink)">
+      <strong>PMI never accepts "continue because we've already spent so much."</strong><br><br>
+      If a project has poor CPI and TCPI &gt; 1.1, the correct response is to surface this to the sponsor and recommend a formal decision — not to push harder. EVM gives you the data; governance makes the call. A PM who hides bad EVM data to avoid sponsor discomfort is exhibiting the wrong behavior.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ CALCULATOR ══════════════════════════════════ -->
+<div id="panel-calc" class="panel">
+  <div class="sec-eyebrow">Enter scenario values — all metrics update instantly</div>
+  <div class="sec-title">EVM calculator</div>
+  <div class="calc-card">
+    <div class="calc-inputs">
+      <div class="input-group">
+        <label>BAC — budget at completion</label>
+        <input type="number" id="c-bac" value="200000" oninput="calcEVM()"/>
+      </div>
+      <div class="input-group">
+        <label>% planned complete</label>
+        <input type="number" id="c-pp" value="60" min="0" max="100" oninput="calcEVM()"/>
+      </div>
+      <div class="input-group">
+        <label>% actually complete</label>
+        <input type="number" id="c-pd" value="45" min="0" max="100" oninput="calcEVM()"/>
+      </div>
+      <div class="input-group">
+        <label>AC — actual cost spent</label>
+        <input type="number" id="c-ac" value="100000" oninput="calcEVM()"/>
+      </div>
+    </div>
+    <div class="results-grid" id="calc-results"></div>
+    <div class="calc-summary" id="calc-summary"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ EAC DECISION ══════════════════════════════════ -->
+<div id="panel-eac" class="panel">
+  <div class="sec-eyebrow">The most-missed EVM concept on the exam</div>
+  <div class="sec-title">Which EAC formula do I use?</div>
+  <p style="font-size:14px; color:var(--muted); margin-bottom:1.5rem; line-height:1.6">The exam always signals which formula to use. Answer these two questions to find the right one.</p>
+
+  <div class="tree-card">
+    <div class="tree-q">Q1 — Is the original estimate still considered valid and realistic?</div>
+    <div class="tree-opts">
+      <div class="tree-opt" id="q1-yes" onclick="q1('yes')">Yes — the original plan was sound, we just executed differently</div>
+      <div class="tree-opt" id="q1-no"  onclick="q1('no')">No — the original estimate is fundamentally flawed or outdated</div>
+    </div>
+    <div class="tree-result" id="r-no" style="background:var(--teal-bg); border-left:3px solid var(--teal)">
+      <div class="tree-formula-name" style="color:var(--teal)">EAC = AC + ETC</div>
+      <div class="tree-formula-display" style="color:var(--teal)">AC + ETC</div>
+      <div class="tree-formula-when">The team provides a fresh bottom-up estimate for remaining work (ETC). Use this when the original estimate is no longer reliable — e.g., major scope change, new technology, team turnover.</div>
+      <span class="tree-reset" onclick="resetTree()">↩ start over</span>
+    </div>
+  </div>
+
+  <div class="tree-card" id="q2-card" style="display:none">
+    <div class="tree-q">Q2 — Will the current CPI efficiency continue, or will both cost AND schedule efficiency affect the forecast?</div>
+    <div class="tree-opts">
+      <div class="tree-opt" id="q2-cpi"   onclick="q2('cpi')">Current CPI efficiency will continue for remaining work</div>
+      <div class="tree-opt" id="q2-both"  onclick="q2('both')">Both CPI and SPI are relevant (tight deadline, compressed schedule)</div>
+    </div>
+    <div class="tree-result" id="r-cpi" style="background:var(--accent-bg); border-left:3px solid var(--accent)">
+      <div class="tree-formula-name" style="color:var(--accent)">EAC = BAC ÷ CPI <span style="font-size:12px;font-weight:400">(most common)</span></div>
+      <div class="tree-formula-display" style="color:var(--accent)">BAC ÷ CPI</div>
+      <div class="tree-formula-when">The go-to formula. Use when nothing in the question suggests the future will be different from current performance. If the question says "assuming current trends continue" — this is always the answer.</div>
+      <span class="tree-reset" onclick="resetTree()">↩ start over</span>
+    </div>
+    <div class="tree-result" id="r-both" style="background:var(--blue-bg); border-left:3px solid var(--blue)">
+      <div class="tree-formula-name" style="color:var(--blue)">EAC = AC + [(BAC−EV) ÷ (CPI×SPI)]</div>
+      <div class="tree-formula-display" style="color:var(--blue); font-size:15px">AC + [(BAC−EV) ÷ (CPI×SPI)]</div>
+      <div class="tree-formula-when">Use when the question signals that the project is under schedule pressure and both schedule and cost performance are affecting the remaining work forecast. Less common — but signals that it's needed by mentioning both CPI and SPI explicitly.</div>
+      <span class="tree-reset" onclick="resetTree()">↩ start over</span>
+    </div>
+  </div>
+
+  <div class="tree-card" style="background:var(--ink); color:white; border-color:var(--ink); margin-top:1rem">
+    <div style="font-family:var(--display);font-size:15px;font-weight:700;margin-bottom:8px;color:white">Exam signal decoder</div>
+    <div style="font-size:13px;line-height:1.7;color:#ccc">
+      <strong style="color:white">"Assuming current trends continue"</strong> → BAC ÷ CPI<br>
+      <strong style="color:white">"The team re-estimated the remaining work as $X"</strong> → AC + ETC (ETC = that $X)<br>
+      <strong style="color:white">"The original estimate is no longer valid"</strong> → AC + ETC<br>
+      <strong style="color:white">"Both CPI and SPI should be considered"</strong> → AC + [(BAC−EV) ÷ (CPI×SPI)]<br>
+      <strong style="color:white">No qualifier given</strong> → default to BAC ÷ CPI
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ QUIZ ══════════════════════════════════ -->
+<div id="panel-quiz" class="panel">
+  <div class="sec-eyebrow">8 exam-style questions — graded as you go</div>
+  <div class="sec-title">Practice quiz</div>
+  <div class="quiz-header">
+    <div class="quiz-score" id="quiz-score">0 / 0 correct</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-prog-fill" style="width:0%"></div></div>
+    <button class="nav-btn" onclick="resetQuiz()">Reset</button>
+  </div>
+  <div id="q-container"></div>
+  <div class="q-nav">
+    <button class="nav-btn primary" id="btn-next" style="display:none" onclick="nextQ()">Next question →</button>
+    <span class="q-counter" id="q-counter"></span>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ── Tab switching ──
+function showTab(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'calc') calcEVM();
+  if (name === 'quiz') renderQ();
+  if (name === 'eac') resetTree();
+}
+
+// ── Calculator ──
+function calcEVM() {
+  const bac = parseFloat(document.getElementById('c-bac').value) || 0;
+  const pp  = (parseFloat(document.getElementById('c-pp').value) || 0) / 100;
+  const pd  = (parseFloat(document.getElementById('c-pd').value) || 0) / 100;
+  const ac  = parseFloat(document.getElementById('c-ac').value) || 0;
+
+  const pv  = bac * pp;
+  const ev  = bac * pd;
+  const cv  = ev - ac;
+  const sv  = ev - pv;
+  const cpi = ac > 0 ? ev / ac : 0;
+  const spi = pv > 0 ? ev / pv : 0;
+  const eac = cpi > 0 ? bac / cpi : 0;
+  const etc = eac - ac;
+  const vac = bac - eac;
+  const tcpi = (bac - ac) !== 0 ? (bac - ev) / (bac - ac) : 0;
+
+  const $ = v => '$' + Math.round(v).toLocaleString();
+  const r = (v, d=2) => v.toFixed(d);
+
+  const chips = [
+    { label:'PV', val: $(pv), cls:'rc-neut', interp:'' },
+    { label:'EV', val: $(ev), cls:'rc-neut', interp:'' },
+    { label:'CV', val: $(cv), cls: cv>=0?'rc-good':'rc-bad', interp: cv>=0?'under budget':'over budget' },
+    { label:'SV', val: $(sv), cls: sv>=0?'rc-good':'rc-bad', interp: sv>=0?'ahead':'behind' },
+    { label:'CPI', val: r(cpi), cls: cpi>=1?'rc-good':cpi>=0.9?'rc-warn':'rc-bad', interp: cpi>=1?'on/under budget':cpi>=0.9?'slight overrun':'over budget' },
+    { label:'SPI', val: r(spi), cls: spi>=1?'rc-good':spi>=0.9?'rc-warn':'rc-bad', interp: spi>=1?'on/ahead':'behind schedule' },
+    { label:'EAC', val: $(eac), cls:'rc-neut', interp:'' },
+    { label:'ETC', val: $(etc), cls:'rc-neut', interp:'remaining need' },
+    { label:'VAC', val: $(vac), cls: vac>=0?'rc-good':'rc-bad', interp: vac>=0?'under at finish':'over at finish' },
+    { label:'TCPI', val: r(tcpi), cls: tcpi<=1?'rc-good':tcpi<=1.1?'rc-warn':'rc-bad', interp: tcpi>1.1?'unrealistic':'achievable' },
+  ];
+
+  document.getElementById('calc-results').innerHTML = chips.map(c =>
+    `<div class="result-chip ${c.cls}">
+      <div class="rc-label">${c.label}</div>
+      <div class="rc-val">${c.val}</div>
+      ${c.interp ? `<div class="rc-interp">${c.interp}</div>` : ''}
+    </div>`
+  ).join('');
+
+  const costOK = cv >= 0, schOK = sv >= 0;
+  const summaryBg = costOK && schOK ? 'var(--green-bg)' : !costOK && !schOK ? 'var(--red-bg)' : 'var(--amber-bg)';
+  const summaryBorder = costOK && schOK ? 'var(--green)' : !costOK && !schOK ? 'var(--red)' : 'var(--amber)';
+  document.getElementById('calc-summary').style.background = summaryBg;
+  document.getElementById('calc-summary').style.borderLeftColor = summaryBorder;
+  document.getElementById('calc-summary').style.color = summaryBorder;
+  document.getElementById('calc-summary').innerHTML =
+    `This project is <strong>${cv>=0?'under':'over'} budget</strong> (CPI ${r(cpi)}) and <strong>${sv>=0?'ahead of':'behind'} schedule</strong> (SPI ${r(spi)}). ` +
+    `Forecasted final cost: <strong>${$(eac)}</strong> (${vac>=0?'saving':'overspending'} ${$(Math.abs(vac))}). ` +
+    `Remaining work must be done at ${r(tcpi)}x efficiency${tcpi>1.1?' — <strong>unrealistic, recommend revising EAC</strong>':' — achievable'}.`;
+}
+
+// ── EAC Decision tree ──
+function q1(ans) {
+  document.getElementById('q1-yes').classList.remove('selected');
+  document.getElementById('q1-no').classList.remove('selected');
+  document.getElementById('q1-' + ans).classList.add('selected');
+  document.getElementById('r-no').classList.remove('show');
+  document.getElementById('q2-card').style.display = 'none';
+  if (ans === 'no') {
+    document.getElementById('r-no').classList.add('show');
+  } else {
+    document.getElementById('q2-card').style.display = 'block';
+  }
+}
+function q2(ans) {
+  document.getElementById('q2-cpi').classList.remove('selected');
+  document.getElementById('q2-both').classList.remove('selected');
+  document.getElementById('q2-' + ans).classList.add('selected');
+  document.getElementById('r-cpi').classList.remove('show');
+  document.getElementById('r-both').classList.remove('show');
+  document.getElementById('r-' + ans).classList.add('show');
+}
+function resetTree() {
+  ['q1-yes','q1-no','q2-cpi','q2-both'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('selected'); });
+  ['r-no','r-cpi','r-both'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('show'); });
+  document.getElementById('q2-card').style.display = 'none';
+}
+
+// ── Quiz ──
+const QS = [
+  { q:"Your project has BAC = $300,000. After 8 months you have spent $160,000 (AC) and completed 45% of the work. What is the CPI?",
+    scenario:"BAC = $300,000 | % complete = 45% | AC = $160,000",
+    opts:["0.84","1.19","0.72","1.00"],
+    ans:0,
+    exp:"EV = 45% × $300,000 = $135,000. CPI = EV ÷ AC = $135,000 ÷ $160,000 = 0.84. Below 1.0 — the project is getting only $0.84 of value per $1 spent. Cost corrective action is needed." },
+  { q:"Using the same project (BAC $300,000, CPI 0.84), what is the forecasted EAC assuming current efficiency continues?",
+    scenario:"BAC = $300,000 | CPI = 0.84",
+    opts:["$357,143","$300,000","$285,000","$341,463"],
+    ans:0,
+    exp:"EAC = BAC ÷ CPI = $300,000 ÷ 0.84 = $357,143. The project is trending significantly over budget. This is the most common EAC formula — use when the question says 'assuming current trends continue.'" },
+  { q:"SV is negative and CV is positive. Which best describes the project?",
+    scenario:"CV > 0 | SV < 0",
+    opts:["Ahead of schedule, over budget","Behind schedule, under budget","Behind schedule, over budget","Ahead of schedule, under budget"],
+    ans:1,
+    exp:"SV = EV − PV. Negative SV means EV < PV — behind schedule. CV = EV − AC. Positive CV means EV > AC — under budget. The project is lagging on schedule but spending efficiently." },
+  { q:"BAC = $500,000. EV = $200,000. AC = $180,000. The team re-estimates remaining work at $350,000. What is EAC?",
+    scenario:"BAC = $500,000 | EV = $200,000 | AC = $180,000 | ETC (fresh) = $350,000",
+    opts:["$530,000","$450,000","$500,000","$480,000"],
+    ans:0,
+    exp:"When the team provides a fresh bottom-up estimate, use: EAC = AC + ETC = $180,000 + $350,000 = $530,000. The original estimate is no longer used. Note that CPI-based EAC would give $500,000 ÷ (200/180) = $450,000 — different result, different formula trigger." },
+  { q:"TCPI = 1.18 based on BAC. What is the correct action for the PM?",
+    scenario:"TCPI = 1.18",
+    opts:["Tell the team to work 18% harder on remaining tasks","Report that the project will likely finish over budget and recommend revising EAC","Cancel the project immediately","Request 18% more budget from the sponsor"],
+    ans:1,
+    exp:"TCPI > 1.1 is generally considered unrealistic — the team would need to perform at 118% efficiency to hit the original budget. The correct PMI response is to surface this to the sponsor, update EAC, and let governance make the decision. Telling the team to 'work harder' ignores the systemic problem." },
+  { q:"A project is 30% complete. CPI = 0.75. A senior executive tells the PM the team just needs to 'pick up the pace' to recover. What should the PM communicate?",
+    scenario:"% complete = 30% | CPI = 0.75",
+    opts:["Agree and implement a crashing plan","Explain that CPI at 30% complete is highly predictive of final cost — the project is likely to finish significantly over budget","Tell the team to work overtime to improve CPI","Request scope reduction to improve CPI"],
+    ans:1,
+    exp:"PMI research shows that CPI rarely improves significantly after 20% complete. A CPI of 0.75 at 30% complete is a strong predictor of the final outcome. The PM must communicate this honestly to the sponsor — not agree to an unrealistic recovery plan. Transparent communication of EVM data is a core PM responsibility." },
+  { q:"Which single EVM metric is the most reliable predictor of final project cost?",
+    scenario:"",
+    opts:["SPI — it shows schedule performance","VAC — it shows the projected overrun","CPI — it is highly stable after 20% complete","CV — it shows the current cost variance in dollars"],
+    ans:2,
+    exp:"CPI is considered the most reliable predictor of final cost. Research consistently shows it stabilizes after approximately 20% of the project is complete and rarely improves significantly — making EAC = BAC ÷ CPI a strong forecast. CV tells you the dollar impact; CPI tells you the efficiency rate, which is what drives the forecast." },
+  { q:"BAC = $400,000. EV = $150,000. AC = $170,000. PV = $200,000. What is VAC?",
+    scenario:"BAC = $400,000 | EV = $150,000 | AC = $170,000 | PV = $200,000",
+    opts:["−$66,667","−$50,000","$50,000","−$33,333"],
+    ans:0,
+    exp:"Step 1: CPI = EV ÷ AC = $150,000 ÷ $170,000 = 0.882. Step 2: EAC = BAC ÷ CPI = $400,000 ÷ 0.882 = $453,515. Step 3: VAC = BAC − EAC = $400,000 − $453,515 = −$53,515 ≈ −$53,333 (rounding). Negative VAC means the project is projected to finish over budget. Note: SPI = $150,000 ÷ $200,000 = 0.75 — also behind schedule." }
+];
+
+let cur=0, score=0, answered=[];
+
+function renderQ() {
+  const q = QS[cur];
+  const done = answered[cur] !== undefined;
+  const chosen = answered[cur];
+  const total = answered.filter(a => a !== undefined).length;
+
+  document.getElementById('quiz-score').textContent = `${score} / ${total} correct`;
+  document.getElementById('quiz-prog-fill').style.width = ((cur / QS.length) * 100) + '%';
+  document.getElementById('q-counter').textContent = `Question ${cur + 1} of ${QS.length}`;
+
+  const optsHTML = q.opts.map((o, i) => {
+    let cls = 'opt-btn';
+    if (done) {
+      if (i === q.ans) cls += ' reveal';
+      else if (i === chosen) cls += ' wrong';
+    }
+    return `<button class="${cls}" onclick="answer(${i})" ${done ? 'disabled' : ''}>${o}</button>`;
+  }).join('');
+
+  document.getElementById('q-container').innerHTML = `
+    <div class="q-card">
+      <div class="q-num">Question ${cur + 1} of ${QS.length}</div>
+      <div class="q-text">${q.q}</div>
+      ${q.scenario ? `<div class="q-scenario">${q.scenario}</div>` : ''}
+      <div class="opts">${optsHTML}</div>
+      <div class="explanation" id="exp" style="${done ? 'display:block' : ''}">${q.exp}</div>
+    </div>`;
+
+  document.getElementById('btn-next').style.display = done && cur < QS.length - 1 ? 'inline-block' : 'none';
+}
+
+function answer(i) {
+  if (answered[cur] !== undefined) return;
+  answered[cur] = i;
+  if (i === QS[cur].ans) score++;
+  renderQ();
+}
+
+function nextQ() { if (cur < QS.length - 1) { cur++; renderQ(); } }
+
+function resetQuiz() { cur = 0; score = 0; answered = []; renderQ(); }
+
+// init
+calcEVM();
+renderQ();
+</script>
+</body>
+</html>
