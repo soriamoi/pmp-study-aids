@@ -4,4 +4,4 @@ Interactive study aids for pmp exam preparation, highlighting evm understanding 
 ## Tools
 
 - **[ECO → PMBOK Map](https://soriamoi.github.io/pmp-study-aids/)**
-- **[EVM Study Session](https://soriamoi.github.io/pmp-study-aid/evm-study.html)**
+- **[EVM Study Session](https://soriamoi.github.io/pmp-study-aids/evm-study.html)**
