@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PMP ECO → PMBOK Reference Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --purple: #534AB7; --purple-bg: #EEEDFE; --purple-border: #AFA9EC;
+    --teal:   #0F6E56; --teal-bg:   #E1F5EE; --teal-border:   #5DCAA5;
+    --coral:  #993C1D; --coral-bg:  #FAECE7; --coral-border:  #F0997B;
+    --blue-bg: #E6F1FB; --blue-text: #0C447C;
+    --green-bg: #E1F5EE; --green-text: #085041;
+    --indigo-bg: #EEEDFE; --indigo-text: #3C3489;
+    --amber-bg: #FAEEDA; --amber-text: #633806;
+    --border: #E8E8E8;
+    --text: #1a1a1a;
+    --muted: #666;
+    --hint: #999;
+    --page-bg: #FAFAF8;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--page-bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .app { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* ── Header ── */
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--hint); text-transform: uppercase; margin-bottom: 4px; }
+  h1 { font-size: 24px; font-weight: 600; color: var(--text); }
+  .subtitle { font-size: 13px; color: var(--muted); margin-top: 4px; margin-bottom: 1.25rem; }
+
+  /* ── Domain weight pills ── */
+  .weight-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .weight-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 500;
+    border: 1px solid transparent;
+  }
+  .wp-I   { background: var(--purple-bg); color: var(--purple); border-color: var(--purple-border); }
+  .wp-II  { background: var(--teal-bg);   color: var(--teal);   border-color: var(--teal-border);   }
+  .wp-III { background: var(--coral-bg);  color: var(--coral);  border-color: var(--coral-border);  }
+
+  /* ── Filter bar ── */
+  .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .filter-bar input {
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    padding: 5px 14px; border: 1px solid var(--border); border-radius: 20px;
+    background: white; color: var(--text); outline: none;
+    width: 180px; transition: border-color 0.15s;
+  }
+  .filter-bar input:focus { border-color: #bbb; }
+
+  .source-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 1.5rem; }
+  .source-bar .label { font-size: 11px; font-weight: 500; color: var(--hint); }
+
+  button.pill-btn {
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+    padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);
+    background: white; color: #555; cursor: pointer; transition: all 0.12s;
+    line-height: 1.4;
+  }
+  button.pill-btn:hover { border-color: #bbb; }
+  button.pill-btn.active-all  { background: #333; color: white; border-color: #333; }
+  button.pill-btn.active-I    { background: var(--purple-bg); color: var(--purple); border: 1.5px solid var(--purple); }
+  button.pill-btn.active-II   { background: var(--teal-bg);   color: var(--teal);   border: 1.5px solid var(--teal);   }
+  button.pill-btn.active-III  { background: var(--coral-bg);  color: var(--coral);  border: 1.5px solid var(--coral);  }
+  button.pill-btn.active-pmbok7    { background: var(--blue-bg);   color: var(--blue-text);   border: 1.5px solid var(--blue-text);   }
+  button.pill-btn.active-pgpg     { background: var(--green-bg);  color: var(--green-text);  border: 1.5px solid var(--green-text);  }
+  button.pill-btn.active-agile    { background: var(--indigo-bg); color: var(--indigo-text); border: 1.5px solid var(--indigo-text); }
+  button.pill-btn.active-examAngle { background: var(--amber-bg);  color: var(--amber-text);  border: 1.5px solid var(--amber-text);  }
+
+  /* ── Main grid ── */
+  .main-grid { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: start; }
+  .main-grid.has-detail { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 680px) {
+    .main-grid.has-detail { grid-template-columns: 1fr; }
+  }
+
+  /* ── Task list ── */
+  .task-list { display: flex; flex-direction: column; gap: 6px; }
+  .no-results { font-size: 13px; color: var(--hint); padding: 2rem; text-align: center; }
+
+  .task-card {
+    background: white; border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    user-select: none;
+  }
+  .task-card:hover { border-color: #ccc; }
+  .task-card.selected-I   { border: 1.5px solid var(--purple); box-shadow: 0 0 0 3px var(--purple-bg); }
+  .task-card.selected-II  { border: 1.5px solid var(--teal);   box-shadow: 0 0 0 3px var(--teal-bg);   }
+  .task-card.selected-III { border: 1.5px solid var(--coral);  box-shadow: 0 0 0 3px var(--coral-bg);  }
+
+  .task-header { display: flex; align-items: center; gap: 8px; }
+  .task-id {
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+    padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+  }
+  .id-I   { background: var(--purple-bg); color: var(--purple); }
+  .id-II  { background: var(--teal-bg);   color: var(--teal);   }
+  .id-III { background: var(--coral-bg);  color: var(--coral);  }
+  .task-title { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+  .task-caret { font-size: 10px; color: #ccc; }
+
+  .task-detail-inline {
+    margin-top: 8px; font-size: 12px; border-radius: 6px;
+    padding: 6px 8px; line-height: 1.55;
+  }
+  .detail-pmbok7    { background: var(--blue-bg);   color: var(--blue-text);   }
+  .detail-pgpg      { background: var(--green-bg);  color: var(--green-text);  }
+  .detail-agile     { background: var(--indigo-bg); color: var(--indigo-text); }
+  .detail-examAngle { background: var(--amber-bg);  color: var(--amber-text);  }
+  .detail-label { font-weight: 600; }
+
+  /* ── Drilldown panel ── */
+  .drilldown {
+    background: white; border: 1px solid var(--border); border-radius: 12px;
+    padding: 1.25rem; position: sticky; top: 1rem;
+    max-height: calc(100vh - 3rem); overflow-y: auto;
+  }
+  .dd-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 1rem; }
+  .dd-meta { flex: 1; }
+  .dd-badges { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .dd-domain-label { font-size: 11px; color: var(--hint); }
+  .dd-title { font-size: 16px; font-weight: 600; color: var(--text); }
+  .close-btn {
+    background: none; border: none; font-size: 20px; color: #bbb;
+    cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0;
+  }
+  .close-btn:hover { color: #888; }
+
+  .source-block { margin-bottom: 10px; }
+  .source-block-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .source-block-body { font-size: 13px; line-height: 1.6; border-radius: 7px; padding: 8px 10px; }
+
+  .dd-nav { display: flex; gap: 8px; margin-top: 1rem; border-top: 1px solid #f0f0f0; padding-top: 0.75rem; }
+  .nav-btn {
+    flex: 1; font-family: 'DM Sans', sans-serif; font-size: 12px;
+    padding: 6px; border-radius: 7px; border: 1px solid var(--border);
+    background: white; color: var(--text); cursor: pointer; transition: background 0.12s;
+  }
+  .nav-btn:hover:not(:disabled) { background: #f5f5f5; }
+  .nav-btn:disabled { color: #ccc; cursor: default; background: #fafafa; }
+
+  /* ── Footer ── */
+  .footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 12px; color: var(--hint); line-height: 1.6; }
+  .footer a { color: #888; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="eyebrow">PMP Exam Prep</div>
+  <h1>ECO → PMBOK reference map</h1>
+  <p class="subtitle">35 tasks across 3 domains &middot; filter by domain, search by task, or click any row to drill in</p>
+
+  <!-- Domain weight pills -->
+  <div class="weight-row">
+    <span class="weight-pill wp-I">Domain I &mdash; People &middot; 42% &middot; 14 tasks</span>
+    <span class="weight-pill wp-II">Domain II &mdash; Process &middot; 50% &middot; 17 tasks</span>
+    <span class="weight-pill wp-III">Domain III &mdash; Business Environment &middot; 8% &middot; 4 tasks</span>
+  </div>
+
+  <!-- Domain filter + search -->
+  <div class="filter-bar">
+    <button class="pill-btn active-all" data-domain="all" onclick="setDomain(this)">All domains</button>
+    <button class="pill-btn" data-domain="I"   onclick="setDomain(this)">Domain I — People</button>
+    <button class="pill-btn" data-domain="II"  onclick="setDomain(this)">Domain II — Process</button>
+    <button class="pill-btn" data-domain="III" onclick="setDomain(this)">Domain III — Business Environment</button>
+    <input type="text" id="search-input" placeholder="Search tasks…" oninput="render()" />
+  </div>
+
+  <!-- Source filter -->
+  <div class="source-bar">
+    <span class="label">Show detail:</span>
+    <button class="pill-btn active-all" data-source="all"       onclick="setSource(this)">All</button>
+    <button class="pill-btn" data-source="pmbok7"    onclick="setSource(this)">PMBOK 7</button>
+    <button class="pill-btn" data-source="pgpg"      onclick="setSource(this)">Process Groups Practice Guide</button>
+    <button class="pill-btn" data-source="agile"     onclick="setSource(this)">Agile Practice Guide</button>
+    <button class="pill-btn" data-source="examAngle" onclick="setSource(this)">Exam angle</button>
+  </div>
+
+  <!-- Main content -->
+  <div class="main-grid" id="main-grid">
+    <div class="task-list" id="task-list"></div>
+  </div>
+
+  <div class="footer">
+    Based on the PMI Examination Content Outline (ECO) &middot;
+    References: PMBOK&reg; Guide 7th Edition, Process Groups Practice Guide, Agile Practice Guide &middot;
+    Not affiliated with PMI &middot;
+    <a href="https://www.pmi.org/certifications/project-management-pmp/exam-prep/content-outline" target="_blank" rel="noopener">Official ECO &rarr;</a>
+  </div>
+
+</div>
+
+<script>
+const DOMAIN_META = {
+  I:   { color: '#534AB7', bg: '#EEEDFE', border: '#AFA9EC' },
+  II:  { color: '#0F6E56', bg: '#E1F5EE', border: '#5DCAA5' },
+  III: { color: '#993C1D', bg: '#FAECE7', border: '#F0997B' },
+};
+
+const SOURCE_LABELS = {
+  pmbok7:    'PMBOK 7',
+  pgpg:      'Process Groups Practice Guide',
+  agile:     'Agile Practice Guide',
+  examAngle: 'Exam angle',
+};
+
+const SOURCE_COLORS = {
+  pmbok7:    { bg: '#E6F1FB', text: '#0C447C' },
+  pgpg:      { bg: '#E1F5EE', text: '#085041' },
+  agile:     { bg: '#EEEDFE', text: '#3C3489' },
+  examAngle: { bg: '#FAEEDA', text: '#633806' },
+};
+
+const SOURCES = ['pmbok7', 'pgpg', 'agile', 'examAngle'];
+
+const TASKS = [
+  // ── Domain I ──
+  { domain:'I', id:'1.1',  title:'Manage conflict',
+    pmbok7:'Team performance domain; Principle: Create collaborative environment',
+    pgpg:'Ch. 9 Resource Management, Ch. 13 Stakeholder Management',
+    agile:'Agile Practice Guide — servant leadership, team self-organization',
+    examAngle:'PMI expects the PM to address conflict early and directly. Avoiding conflict or escalating immediately are both wrong answers. Preferred: facilitate resolution using collaborative problem-solving.' },
+  { domain:'I', id:'1.2',  title:'Lead a team',
+    pmbok7:'Team performance domain; Principles: Leadership, Stewardship',
+    pgpg:'Ch. 9 Resource Management',
+    agile:'Agile Practice Guide — servant leadership model',
+    examAngle:'PMI favors servant leadership over command-and-control. In agile contexts, the PM enables the team rather than directing work. Look for answers that empower, not control.' },
+  { domain:'I', id:'1.3',  title:'Support team performance',
+    pmbok7:'Team performance domain',
+    pgpg:'Ch. 9 Resource Management',
+    agile:'Sprint retrospectives, velocity tracking',
+    examAngle:'Supporting performance means removing impediments, providing resources, and creating conditions for success — not micromanaging outputs.' },
+  { domain:'I', id:'1.4',  title:'Empower team members and stakeholders',
+    pmbok7:'Principle: Empower team members and stakeholders; Team domain',
+    pgpg:'Ch. 9',
+    agile:'Self-organizing teams, delegating decision-making to the team',
+    examAngle:'PMI consistently favors empowering the team to make decisions within their domain. Answers that centralize all decisions with the PM are wrong.' },
+  { domain:'I', id:'1.5',  title:'Ensure team members are adequately trained',
+    pmbok7:'Team performance domain',
+    pgpg:'Ch. 9 — training plans, competency gaps',
+    agile:'Team capability building in Agile Practice Guide',
+    examAngle:'Identifying and closing skill gaps is a PM responsibility. Don\'t assume team members will self-identify their own training needs.' },
+  { domain:'I', id:'1.6',  title:'Build a team',
+    pmbok7:'Team domain; Principle: Create collaborative environment',
+    pgpg:'Ch. 9 — Tuckman model (forming, storming, norming, performing)',
+    agile:'Agile team formation, Definition of Done, working agreements',
+    examAngle:'Know Tuckman\'s stages. Conflict during \'storming\' is normal and expected — the PM facilitates through it, not around it.' },
+  { domain:'I', id:'1.7',  title:'Address and remove impediments',
+    pmbok7:'Team domain; Principle: Enable change',
+    pgpg:'Issue logs, escalation paths',
+    agile:'Scrum: Scrum Master removes impediments; daily standup surfaces blockers',
+    examAngle:'In agile, this is a core Scrum Master function. In predictive, it\'s the PM\'s responsibility. Either way — act quickly; do not let impediments linger.' },
+  { domain:'I', id:'1.8',  title:'Negotiate project agreements',
+    pmbok7:'Stakeholder domain',
+    pgpg:'Ch. 12 Procurement Management — contract negotiation',
+    agile:'Agile contracts: time-and-material, scope flexibility principles',
+    examAngle:'Negotiation aims for win-win outcomes. PMI does not favor hardball tactics. Agreements should reflect realistic scope, schedule, and cost.' },
+  { domain:'I', id:'1.9',  title:'Collaborate with stakeholders',
+    pmbok7:'Stakeholder domain; Principle: Engage stakeholders effectively',
+    pgpg:'Ch. 13 Stakeholder Management',
+    agile:'Agile: continuous stakeholder involvement, product owner role',
+    examAngle:'Collaboration is ongoing, not periodic. PMI favors proactive and frequent stakeholder engagement over formal-only touchpoints.' },
+  { domain:'I', id:'1.10', title:'Build shared understanding',
+    pmbok7:'Stakeholder + Team domains',
+    pgpg:'Ch. 10 Communications Management — kick-off, chartering',
+    agile:'Definition of Done, team working agreements, Sprint 0',
+    examAngle:'Shared understanding must be established early and reinforced. Misalignment discovered late is a PM failure, not a stakeholder failure.' },
+  { domain:'I', id:'1.11', title:'Engage and support virtual teams',
+    pmbok7:'Team performance domain',
+    pgpg:'Ch. 9 — virtual team considerations',
+    agile:'Remote ceremonies, async communication, digital kanban boards',
+    examAngle:'Virtual teams need more intentional communication and trust-building. PMI expects the PM to proactively design for engagement, not assume it happens naturally.' },
+  { domain:'I', id:'1.12', title:'Define team ground rules',
+    pmbok7:'Team performance domain',
+    pgpg:'Ch. 9 — team charter, ground rules',
+    agile:'Working agreements, team norms established in Sprint 0',
+    examAngle:'Ground rules should be established by the team collaboratively, not imposed by the PM. This increases buy-in and accountability.' },
+  { domain:'I', id:'1.13', title:'Mentor relevant stakeholders',
+    pmbok7:'Team domain; Principle: Stewardship',
+    pgpg:'Ch. 9, Ch. 13',
+    agile:'Coaching in agile contexts — Scrum Master as coach',
+    examAngle:'Mentoring is a leadership behavior. A PM who only manages tasks but doesn\'t develop people is not exhibiting PMI\'s expected leadership model.' },
+  { domain:'I', id:'1.14', title:'Promote team performance through emotional intelligence',
+    pmbok7:'Team domain — interpersonal skills',
+    pgpg:'Ch. 9 — leadership skills, emotional intelligence',
+    agile:'Servant leadership, psychological safety, retrospectives',
+    examAngle:'EI means recognizing your own emotional state and others\'. PMI expects the PM to read team dynamics and respond — not ignore interpersonal signals.' },
+
+  // ── Domain II ──
+  { domain:'II', id:'2.1',  title:'Execute project with urgency (MVP mindset)',
+    pmbok7:'Delivery domain; Principle: Focus on value',
+    pgpg:'Scope management — incremental delivery',
+    agile:'Agile Practice Guide — MVP, incremental delivery, prioritized backlog',
+    examAngle:'PMI expects value delivery to start early. In agile, this means shipping working increments. In predictive, it means managing critical path tightly. Don\'t gold-plate.' },
+  { domain:'II', id:'2.2',  title:'Manage communications',
+    pmbok7:'Stakeholder domain',
+    pgpg:'Ch. 10 Communications Management — communications plan, RACI',
+    agile:'Information radiators, daily standups, retrospectives as communication channels',
+    examAngle:'The communications management plan defines who gets what, when, and how. PMI expects the PM to tailor communication to each stakeholder\'s needs and preferences.' },
+  { domain:'II', id:'2.3',  title:'Assess and manage risks',
+    pmbok7:'Uncertainty domain; Principle: Navigate complexity and uncertainty',
+    pgpg:'Ch. 11 Risk Management — identify, analyze (qual/quant), respond, monitor',
+    agile:'Risk-adjusted backlog, spike stories, frequent retrospectives to surface risk',
+    examAngle:'Know the six risk response strategies: avoid, transfer, mitigate, accept (passive/active), escalate. Risks must be proactively managed — not just logged.' },
+  { domain:'II', id:'2.4',  title:'Engage stakeholders',
+    pmbok7:'Stakeholder domain',
+    pgpg:'Ch. 13 — stakeholder register, engagement assessment matrix',
+    agile:'Product Owner as stakeholder proxy; continuous feedback loops',
+    examAngle:'Stakeholder engagement is measured on a spectrum: unaware → resistant → neutral → supportive → leading. The PM aims to move stakeholders toward supportive/leading.' },
+  { domain:'II', id:'2.5',  title:'Plan and manage budget and resources',
+    pmbok7:'Planning domain; Measurement domain',
+    pgpg:'Ch. 7 Cost Management (EVM, EAC, CPI), Ch. 9 Resource Management',
+    agile:'Agile budgeting: rolling wave, capacity-based planning',
+    examAngle:'EVM is the primary predictive budget tool. EAC = BAC ÷ CPI is the most common exam formula. In agile, budget is managed through velocity and capacity, not detailed WBS costing.' },
+  { domain:'II', id:'2.6',  title:'Plan and manage schedule',
+    pmbok7:'Planning domain; Delivery domain',
+    pgpg:'Ch. 6 Schedule Management — CPM, float, crashing, fast-tracking',
+    agile:'Sprints, velocity, release burndown, story point estimation',
+    examAngle:'Critical path = longest path through the network = zero float. Crashing adds cost; fast-tracking adds risk. SPI measures schedule efficiency in EVM.' },
+  { domain:'II', id:'2.7',  title:'Plan and manage quality',
+    pmbok7:'Delivery domain; Principle: Build quality into processes and deliverables',
+    pgpg:'Ch. 8 Quality Management — quality plan, QA vs QC',
+    agile:'Definition of Done, test-driven development, continuous integration',
+    examAngle:'QA is process-focused (proactive, preventive). QC is product-focused (reactive, inspection). PMI prefers prevention over inspection. Cost of quality: prevention + appraisal + failure.' },
+  { domain:'II', id:'2.8',  title:'Plan and manage scope',
+    pmbok7:'Planning + Delivery domains',
+    pgpg:'Ch. 5 Scope Management — WBS, scope baseline, scope creep vs. change control',
+    agile:'Product backlog as living scope document; scope emerges through iterations',
+    examAngle:'Scope creep is unauthorized scope change — always bad. Approved change through change control is acceptable. WBS decomposition ends at the work package level.' },
+  { domain:'II', id:'2.9',  title:'Integrate project planning activities',
+    pmbok7:'Planning domain',
+    pgpg:'Ch. 4 Integration Management — project management plan, subsidiary plans',
+    agile:'Agile release planning, program increment planning (SAFe)',
+    examAngle:'The project management plan is the master document integrating all subsidiary plans. Changes to one plan may affect others — integration thinking is key.' },
+  { domain:'II', id:'2.10', title:'Manage project changes',
+    pmbok7:'Delivery domain; Principle: Enable change',
+    pgpg:'Ch. 4 — integrated change control, CCB, change log',
+    agile:'Agile welcomes change through backlog refinement — no formal CCB needed',
+    examAngle:'In predictive, ALL changes go through change control — even verbal requests. The CCB approves or rejects changes. In agile, change is handled through backlog prioritization by the Product Owner.' },
+  { domain:'II', id:'2.11', title:'Plan and manage procurement',
+    pmbok7:'Delivery domain',
+    pgpg:'Ch. 12 Procurement Management — contract types, SOW, source selection',
+    agile:'Agile-friendly contracts: T&M, outcome-based; shorter procurement cycles',
+    examAngle:'Contract types: FP (seller bears risk), T&M (buyer bears risk), CR (buyer bears most risk). Fixed-price contracts are preferred when scope is well-defined.' },
+  { domain:'II', id:'2.12', title:'Manage project artifacts',
+    pmbok7:'Project Work domain',
+    pgpg:'Ch. 4 — configuration management, document control',
+    agile:'Lightweight documentation; working software over comprehensive docs',
+    examAngle:'Artifacts must be kept current and accessible. Configuration management ensures the right version is being used by all stakeholders.' },
+  { domain:'II', id:'2.13', title:'Determine appropriate project methodology',
+    pmbok7:'Development Approach &amp; Life Cycle domain',
+    pgpg:'Tailoring guidance',
+    agile:'Agile Practice Guide — selecting predictive, agile, or hybrid',
+    examAngle:'The choice of approach depends on: how well-defined the requirements are, stakeholder availability, risk tolerance, and organizational culture. High uncertainty → agile. Stable scope → predictive.' },
+  { domain:'II', id:'2.14', title:'Establish project governance structure',
+    pmbok7:'Principle: Systems thinking',
+    pgpg:'Ch. 4 — project charter, sponsor role, governance frameworks',
+    agile:'Agile governance: lightweight, decentralized, outcome-focused',
+    examAngle:'Governance defines decision rights, escalation paths, and accountability. PMI expects the PM to operate within governance, not around it.' },
+  { domain:'II', id:'2.15', title:'Manage project issues',
+    pmbok7:'Uncertainty domain',
+    pgpg:'Ch. 11 — issue log, distinction between risks and issues',
+    agile:'Issues surface in standups and retrospectives; impediment backlog',
+    examAngle:'A risk is uncertain (may happen). An issue has already occurred. Issues require immediate action; risks require response planning. Don\'t confuse them in exam scenarios.' },
+  { domain:'II', id:'2.16', title:'Ensure knowledge transfer for project continuity',
+    pmbok7:'Project Work domain; Principle: Stewardship',
+    pgpg:'Ch. 4 close processes, Ch. 9 — lessons learned',
+    agile:'Sprint retrospectives, wiki documentation, communities of practice',
+    examAngle:'Knowledge transfer happens throughout the project, not only at close. Lessons learned should be captured and shared continuously.' },
+  { domain:'II', id:'2.17', title:'Plan and manage project/phase closure',
+    pmbok7:'Delivery domain',
+    pgpg:'Ch. 4 — Close Project or Phase process',
+    agile:'Sprint reviews as mini-closures; project retrospective at program end',
+    examAngle:'Closure activities: formal acceptance, lessons learned, archive artifacts, release resources, close contracts. Closure is required even for cancelled projects.' },
+
+  // ── Domain III ──
+  { domain:'III', id:'3.1', title:'Plan and manage project compliance',
+    pmbok7:'Principle: Stewardship; Delivery domain',
+    pgpg:'Ch. 4 Integration, Ch. 8 Quality Management',
+    agile:'Compliance built into Definition of Done; regulatory acceptance criteria',
+    examAngle:'Compliance includes legal, regulatory, health &amp; safety, and organizational requirements. The PM is responsible for identifying compliance requirements early and embedding them in the plan — not discovering them at close.' },
+  { domain:'III', id:'3.2', title:'Evaluate and deliver project benefits and value',
+    pmbok7:'Principle: Focus on value; Delivery + Measurement domains',
+    pgpg:'Ch. 4 — business case, benefits management plan',
+    agile:'Value-driven delivery; Product Owner prioritizes highest-value items first',
+    examAngle:'Benefits realization is tracked throughout the project. If benefits are no longer achievable or aligned to strategy, the right PMI answer is to surface this and recommend a decision — not continue blindly. Project cancellation can be a success indicator when BRM is working.' },
+  { domain:'III', id:'3.3', title:'Evaluate and address external business environment changes',
+    pmbok7:'Principle: Systems thinking; Uncertainty domain',
+    pgpg:'Ch. 11 Risk Management — environmental risks, PESTLE analysis',
+    agile:'Agile\'s adaptability is well-suited to external environment change',
+    examAngle:'External changes (regulatory, market, competitive) may invalidate the business case or require scope/approach changes. The PM must monitor the environment and escalate changes that affect project viability.' },
+  { domain:'III', id:'3.4', title:'Support organizational change',
+    pmbok7:'Principle: Enable change; Stakeholder domain',
+    pgpg:'Ch. 13 Stakeholder Management',
+    agile:'Agile transformations are organizational change; change management woven into delivery',
+    examAngle:'Projects deliver change. The PM must manage the human side of change — resistance, adoption, transition. Organizational change management (OCM) tools: stakeholder analysis, communication plans, training, reinforcement.' },
+];
+
+// ── State ──
+let activeDomain = 'all';
+let activeSource = 'all';
+let selectedId   = null;
+
+function filteredTasks() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+  return TASKS.filter(t => {
+    const domainOk = activeDomain === 'all' || t.domain === activeDomain;
+    const searchOk = !q || t.title.toLowerCase().includes(q) || t.id.includes(q);
+    return domainOk && searchOk;
+  });
+}
+
+function setDomain(btn) {
+  activeDomain = btn.dataset.domain;
+  document.querySelectorAll('.filter-bar .pill-btn').forEach(b => {
+    b.className = 'pill-btn' + (b.dataset.domain === activeDomain ? ' active-' + activeDomain : '');
+  });
+  selectedId = null;
+  render();
+}
+
+function setSource(btn) {
+  activeSource = btn.dataset.source;
+  document.querySelectorAll('.source-bar .pill-btn').forEach(b => {
+    b.className = 'pill-btn' + (b.dataset.source === activeSource ? ' active-' + activeSource : '');
+  });
+  render();
+}
+
+function selectTask(id) {
+  selectedId = selectedId === id ? null : id;
+  render();
+}
+
+function render() {
+  const tasks    = filteredTasks();
+  const selected = TASKS.find(t => t.id === selectedId);
+  const grid     = document.getElementById('main-grid');
+  const list     = document.getElementById('task-list');
+
+  // grid columns
+  grid.className = 'main-grid' + (selected ? ' has-detail' : '');
+
+  // task list
+  if (tasks.length === 0) {
+    list.innerHTML = '<div class="no-results">No tasks match your filter.</div>';
+  } else {
+    list.innerHTML = tasks.map(t => {
+      const meta = DOMAIN_META[t.domain];
+      const isSel = t.id === selectedId;
+      const selClass = isSel ? ' selected-' + t.domain : '';
+      let inlineDetail = '';
+      if (activeSource !== 'all') {
+        const sc = SOURCE_COLORS[activeSource];
+        inlineDetail = `<div class="task-detail-inline detail-${activeSource}">
+          <span class="detail-label">${SOURCE_LABELS[activeSource]}:</span> ${t[activeSource]}
+        </div>`;
+      }
+      return `<div class="task-card${selClass}" onclick="selectTask('${t.id}')">
+        <div class="task-header">
+          <span class="task-id id-${t.domain}">${t.id}</span>
+          <span class="task-title">${t.title}</span>
+          <span class="task-caret">${isSel ? '▲' : '▼'}</span>
+        </div>
+        ${inlineDetail}
+      </div>`;
+    }).join('');
+  }
+
+  // drilldown panel
+  const existing = document.getElementById('drilldown-panel');
+  if (existing) existing.remove();
+
+  if (selected) {
+    const meta = DOMAIN_META[selected.domain];
+    const idx  = tasks.findIndex(t => t.id === selectedId);
+    const prev = tasks[idx - 1];
+    const next = tasks[idx + 1];
+
+    const panel = document.createElement('div');
+    panel.id = 'drilldown-panel';
+    panel.className = 'drilldown';
+    panel.innerHTML = `
+      <div class="dd-header">
+        <div class="dd-meta">
+          <div class="dd-badges">
+            <span class="task-id id-${selected.domain}">${selected.id}</span>
+            <span class="dd-domain-label">Domain ${selected.domain}</span>
+          </div>
+          <div class="dd-title">${selected.title}</div>
+        </div>
+        <button class="close-btn" onclick="selectTask('${selected.id}')">×</button>
+      </div>
+      ${SOURCES.map(s => {
+        const sc = SOURCE_COLORS[s];
+        return `<div class="source-block">
+          <div class="source-block-label" style="color:${sc.text}">${SOURCE_LABELS[s]}</div>
+          <div class="source-block-body" style="background:${sc.bg};color:${sc.text}">${selected[s]}</div>
+        </div>`;
+      }).join('')}
+      <div class="dd-nav">
+        <button class="nav-btn" onclick="${prev ? `selectTask('${prev.id}')` : ''}" ${!prev ? 'disabled' : ''}>
+          ${prev ? '← ' + prev.id : '← first'}
+        </button>
+        <button class="nav-btn" onclick="${next ? `selectTask('${next.id}')` : ''}" ${!next ? 'disabled' : ''}>
+          ${next ? next.id + ' →' : 'last →'}
+        </button>
+      </div>`;
+    grid.appendChild(panel);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
